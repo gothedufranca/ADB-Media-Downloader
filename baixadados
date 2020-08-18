@@ -1,0 +1,268 @@
+#!/bin/bash
+
+OLDDIR=`pwd`
+DOWNLOADPATH="$HOME/Documentos/scriptdownload"
+EXIT_MSG="Evite sair de qualquer outra forma, exceto pelo comando de saída, ou execute novamente este script e escolha a opção de sair para excluir os arquivos gerados por este script."
+WHATSIMGPATH="/sdcard/WhatsApp/Media/WhatsApp\ Images"
+TARPATH="/sdcard/DCIM/.thumbnails"
+WHATSSENTPATH="$WHATSIMGPATH/Sent"
+WHATSVIDPATH="/sdcard/WhatsApp/Media/WhatsApp\ Video"
+CAMPATH="/sdcard/DCIM/Camera"
+WHATSSTATUSPATH="/sdcard/WhatsApp/Media/.Statuses"
+WHATSTHUMBSPATH="/sdcard/WhatsApp/.Thumbs"
+
+function set_pattern_filenames(){
+	if [[ ! -z $PATTERN ]]
+	then
+		RECEIVED="$TARPATH/img-received.tar.gz"
+		PRIVATE="$TARPATH/img-private.tar.gz"
+		SENT="$TARPATH/img-sent.tar.gz"
+		VIDSENT="$TARPATH/vid-sent.tar.gz"
+		VIDPRIVATE="$TARPATH/vid-private.tar.gz"
+		VIDSENT="$TARPATH/vid-sent.tar.gz"
+		CAMIMAGES="$TARPATH/cam-imgs.tar.gz"
+		CAMVIDEOS="$TARPATH/cam-vid.tar.gz"
+		WHATSTHUMBS="$TARPATH/whatsthumbs.tar.gz"
+		WHATSSTATUS="$TARPATH/whatsstatus.tar.gz"
+	else
+		RECEIVED="$TARPATH/img-received-$PATTERN.tar.gz"
+		PRIVATE="$TARPATH/img-private-$PATTERN.tar.gz"
+		SENT="$TARPATH/img-sent-$PATTERN.tar.gz"
+		VIDSENT="$TARPATH/vid-sent-$PATTERN.tar.gz"
+		VIDPRIVATE="$TARPATH/vid-private-$PATTERN.tar.gz"
+		VIDSENT="$TARPATH/vid-sent-$PATTERN.tar.gz"
+		CAMIMAGES="$TARPATH/cam-imgs.tar-$PATTERN.gz"
+		CAMVIDEOS="$TARPATH/cam-vid-$PATTERN.tar.gz"
+		WHATSTHUMBS="$TARPATH/whatsthumbs.tar.gz"
+		WHATSSTATUS="$TARPATH/whatsstatus.tar.gz"
+	fi
+}
+
+function read_pattern(){
+	echo "Todos os dados serão baixados, a menos que um padrão seja informado."
+	echo "Por padrão, a data do Whatsapp é YYYYMMDD, ou seja, dia 31/12/2000 deve ser informado como 20001231."
+	if [ -z "$PATTERN" ]
+	then
+		echo "Digite um padrão ou pressione ENTER para continuar."
+		read PATTERN
+	else
+		echo "Atualmente o padrão é $PATTERN, Deseja manter o mesmo valor? [S]im	[N]ão"
+		while [ true ] 
+		do
+			read OPCAO_PATTERN
+			case $OPCAO_PATTERN in
+				S|s)
+					echo "O padrão foi mantido como $PATTERN."
+					break
+					;;
+				N|n)
+					echo "Digite um padrão ou pressione ENTER para baixar todos os dados."
+					read PATTERN
+					break
+					;;
+
+				*)
+					echo "Opção inválida. Tente novamente."
+			esac
+		done
+	fi
+	set_pattern_filenames
+	return $PATTERN
+}
+
+function main_menu(){
+	clear
+	echo "------------------------------------------------------"
+	echo "Escolha a opção para baixar:"
+	echo "    1) Imagens recebidas do WhatsApp"
+	echo "    2) Imagens da pasta privada do WhatsApp"
+	echo "    3) Imagens enviadas do WhatsApp"
+	echo "    4) Videos recebidos do WhatsApp"
+	echo "    5) Videos da pasta privada do WhatsApp"
+	echo "    6) Videos Enviados do WhatsApp"
+	echo "    7) Status do WhatsApp"
+	echo "    8) Miniaturas do WhatsApp (muitas vezes os arquivos vem corrompidos, é normal)"
+	echo "    9) Imagens da câmera"
+	echo "   10) Videos da câmera"
+	echo "   11) Miniaturas do sistema (o próprio arquivo será compactado recursivamente)"
+	echo "    0) Sair"
+	echo "------------------------------------------------------"
+	echo $EXIT_MSG
+	if [[ ! -z $OPCAO ]]
+	then
+		echo "A última opção escolhida foi $OPCAO."
+	fi
+	read OPCAO	
+}
+	
+			
+	
+
+
+# Início da execução do script
+
+mkdir $DOWNLOADPATH
+cd $DOWNLOADPATH
+while [ true ]
+do
+	main_menu
+	case $OPCAO in
+		1)
+			read_pattern
+			echo "Iniciando compactação das imagens recebidas."
+			adb shell tar -zcf $RECEIVED $WHATSIMGPATH/*$PATTERN*
+			echo "Compactação concluída."
+			echo "Baixando dados."
+			adb pull $RECEIVED $DOWNLOADPATH/img-received-$PATTERN.tar.gz
+			echo "Imagens recebidas baixadas.."
+			adb shell rm -rf $RECEIVED
+			echo "Arquivo compactado removido."
+			sleep 1
+			;;
+		
+		2)
+			read_pattern
+			echo "Iniciando compactação das imagens da pasta privada."
+			adb shell tar -zcf $PRIVATE $WHATSIMGPATH/Private/*$PATTERN*
+			echo "Compactação concluída."
+			echo "Baixando dados."
+			adb pull $PRIVATE $DOWNLOADPATH/img-private-$PATTERN.tar.gz
+			echo "Imagens da pasta privada baixadas."
+			adb shell rm -rf $PRIVATE
+			echo "Arquivo compactado removido."
+			sleep 1
+			;;
+		
+		3)
+			read_pattern
+			echo "Iniciando compactação das imagens enviadas."
+			adb shell tar -zcf $SENT $WHATSIMGPATH/Sent/*$PATTERN*
+			echo "Compactação concluída."
+			echo "Baixando dados."
+			adb pull $SENT $DOWNLOADPATH/img-sent-$PATTERN.tar.gz
+			echo "Imagens enviadas baixadas."
+			adb shell rm -rf $SENT
+			echo "Arquivo compactado removido."
+			sleep 1
+			;;
+			
+		4)
+			read_pattern
+			echo "Iniciando compactação dos videos recebidos."
+			adb shell tar -zcf $VIDRECEIVED $WHATSVIDPATH/*$PATTERN*
+			echo "Compactação concluída."
+			echo "Baixando dados."
+			adb pull $VIDRECEIVED $DOWNLOADPATH/vid-received-$PATTERN.tar.gz
+			echo "Videos recebidos baixados."
+			adb shell rm -rf $VIDRECEIVED
+			echo "Arquivo compactado removido."
+			sleep 1
+			;;
+
+		5)
+			read_pattern
+			echo "Iniciando compactação dos videos da pasta privada."
+			adb shell tar -zcf $VIDPRIVATE $WHATSVIDPATH/Private/*$PATTERN*
+			echo "Compactação concluída."
+			echo "Baixando dados."
+			adb pull $VIDPRIVATE $DOWNLOADPATH/vid-private-$PATTERN.tar.gz
+			echo "Videos da pasta privada baixados."
+			adb shell rm -rf $VIDPRIVATE
+			echo "Arquivo compactado removido."
+			sleep 1
+			;;
+			
+		6)
+			read_pattern
+			echo "Iniciando compactação dos videos enviados."
+			adb shell tar -zcf $VIDSENT $WHATSVIDPATH/Sent/*$PATTERN*
+			echo "Compactação concluída."
+			echo "Baixando dados."
+			adb pull $VIDSENT $DOWNLOADPATH/vid-sent-$PATTERN.tar.gz
+			echo "Videos enviados baixados."
+			adb shell rm -rf $VIDSENT
+			echo "Arquivo compactado removido."
+			sleep 1
+			;;
+			
+		7)
+			set_pattern_filenames
+			echo "Iniciando compactação dos Status do WhatsApp."
+			adb shell tar -zcf $WHATSSTATUS $WHATSSTATUSPATH
+			echo "Compactação concluída."
+			echo "Baixando dados."
+			adb pull $WHATSSTATUS $DOWNLOADPATH/whatsstatus.tar.gz
+			echo "Arquivos de Status baixados."
+			adb shell rm -rf $WHATSSTATUS
+			echo "Arquivo compactado removido."
+			sleep 1
+			;;
+			
+		8)
+			set_pattern_filenames
+			echo "Iniciando compactação das Miniaturas do WhatsApp."
+			adb shell tar -zcf $WHATSTHUMBS $WHATSTHUMBSPATH
+			echo "Compactação concluída."
+			echo "Baixando dados."
+			adb pull $WHATSTHUMBS $DOWNLOADPATH/whatsthumbs.tar.gz
+			echo "Miniaturas do WhatsApp baixados."
+			adb shell rm -rf $WHATSTHUMBS
+			echo "Arquivo compactado removido."
+			sleep 1
+			;;
+			
+		9)
+			read_pattern
+			echo "Iniciando compactação das imagens da câmera."
+			adb shell tar -zcf $CAMIMAGES $CAMPATH/*$PATTERN*.jpg
+			echo "Compactação concluída."
+			echo "Baixando dados."
+			adb pull $CAMIMAGES $DOWNLOADPATH/cam-imgs-$PATTERN.tar.gz
+			echo "Imagens da câmera baixadas."
+			adb shell rm -rf $CAMIMAGES
+			echo "Arquivo compactado removido."
+			sleep 1
+			;;
+			
+		10)
+			read_pattern
+			echo "Iniciando compactação dos vídeos da câmera"
+			adb shell tar -zcf $CAMVIDEOS $CAMPATH/*$PATTERN*.mp4
+			echo "Compactação concluída."
+			echo "Baixando dados."
+			adb pull $CAMVIDEOS $DOWNLOADPATH/cam-vid-$PATTERN.tar.gz
+			echo "Videos enviados baixados."
+			adb shell rm -rf $CAMVIDEOS
+			echo "Arquivo compactado removido."
+			sleep 1
+			;;
+			
+		11)
+			set_pattern_filenames
+			echo "Iniciando compactação das miniaturas do sistema"
+			adb shell tar -zcf $TARPATH/systemthumbs.tar.gz $TARPATH
+			echo "Compactação concluída."
+			echo "Baixando dados."
+			adb pull $TARPATH/systemthumbs.tar.gz $DOWNLOADPATH/systemthumbs.tar.gz
+			echo "Miniaturas do sistema baixadas"
+			adb shell rm -rf $TARPATH/systemthumbsthumbs.tar.gz
+			echo "Arquivo compactado removido."
+			sleep 1
+			;;
+			
+		0)
+			echo "Preparando para remover arquivos..."
+			sleep 1
+			adb shell rm -rf $(adb shell ls -lash $TARPATH | awk $'{print $9}' | grep 'tar.gz') 
+			echo "Arquivos removidos do dispositivo."
+			echo "Verifique se o nome do arquivo tgz é exibido e remova manualmente caso sim..."
+			adb shell ls $TARPATH | grep tar.gz
+			exit 0
+			;;
+		*)
+			echo Opção inválida. Tente novamente.
+			sleep 1
+			clear
+	esac
+	cd $OLDDIR
+done
